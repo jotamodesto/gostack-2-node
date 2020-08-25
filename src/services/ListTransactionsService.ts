@@ -1,29 +1,28 @@
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import Transaction from '../models/Transaction';
 
-interface Request extends Pick<Transaction, 'type'> {
-  title: string;
-  value: number;
+interface AccountSummary {
+  transactions: Transaction[];
+  balance: { income: number; outcome: number; total: number };
 }
 
-class CreateTransactionService {
+class ListTransactionsService {
   private transactionsRepository: TransactionsRepository;
 
   constructor(transactionsRepository: TransactionsRepository) {
     this.transactionsRepository = transactionsRepository;
   }
 
-  public execute(request: Request): Transaction {
+  public execute(): AccountSummary {
+    const transactions = this.transactionsRepository.all();
     const balance = this.transactionsRepository.getBalance();
 
-    if (request.type === 'outcome' && request.value > balance.total) {
+    if (balance.outcome > balance.total) {
       throw new Error('You do not have enough balance to perform this action');
     }
 
-    const transaction = this.transactionsRepository.create(request);
-
-    return transaction;
+    return { transactions, balance };
   }
 }
 
-export default CreateTransactionService;
+export default ListTransactionsService;
